@@ -1,6 +1,11 @@
 package likelion13th.blog.service;
 
+import jakarta.persistence.EntityNotFoundException;
 import likelion13th.blog.domain.Article;
+import likelion13th.blog.dto.AddArticleRequest;
+import likelion13th.blog.dto.ArticleResponse;
+import likelion13th.blog.dto.SimpleArticleResponse;
+import likelion13th.blog.repository.ArticleRepository;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -10,42 +15,36 @@ import java.util.NoSuchElementException;
 @Service
 public class ArticleService {
 
-    private final List<Article> articleDB = new ArrayList<>();
+    private final ArticleRepository articleRepository;
     private Long nextId = 1L;
 
-    public Article addArticle(Article article) {
-
-        if(article.getAuthor() == null
-        || article.getContent() == null
-        || article.getTitle() == null
-        || article.getPassword() == null) {
-            throw new IllegalArgumentException("제목, 내용, 작성자, 비밀번호는 필수 입력사항입니다.");
-        }
-
-        Article newArticle = new Article(
-                nextId++,
-                article.getTitle(),
-                article.getContent(),
-                article.getAuthor(),
-                article.getPassword()
-        );
-
-        articleDB.add(newArticle);
-
-        return newArticle;
+    public ArticleService(ArticleRepository articleRepository) {
+        this.articleRepository = articleRepository;
     }
 
-    public List<Article> findAll() {
-        return articleDB;
+    public ArticleResponse addArticle(AddArticleRequest request) {
+
+        Article article = request.toEntity();
+
+        articleRepository.save(article);
+
+        return ArticleResponse.of(article);
     }
 
-    public Article findById(Long id) {
-        for (Article article : articleDB) {
-            if(article.getId().equals(id)) {
-                return article;
-            }
-        }
+    public List<SimpleArticleResponse> getAllArticles() {
 
-        throw new NoSuchElementException("해당 ID의 게시글을 찾을 수 없습니다.");
+        List<Article> articleList = articleRepository.findAll();
+        List<SimpleArticleResponse> articleResponseList = articleList.stream()
+                .map(article -> SimpleArticleResponse.of(article))
+                .toList();
+
+        return articleResponseList;
+    }
+
+    public ArticleResponse getArticle(Long id) {
+
+        Article article = articleRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("Cannot found article with id: " + id));
+
+        return ArticleResponse.of(article);
     }
 }
