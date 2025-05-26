@@ -6,7 +6,8 @@ import lombok.*;
 import java.time.LocalDateTime;
 
 @Entity
-@Getter @Setter
+@Getter
+@Setter
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
@@ -32,7 +33,7 @@ public class Article {
     @Column(nullable = false)
     private String author;
 
-    public Article(String title, String content, String author,  String password) {
+    public Article(String title, String content, String author, String password) {
         this.title = title;
         this.content = content;
         this.author = author;
@@ -40,8 +41,19 @@ public class Article {
         this.createdAt = LocalDateTime.now();
     }
 
-    public void update(String title, String content){
-        this.title=title;
-        this.content=content;
+    public void update(String title, String content) {
+        this.title = title;
+        this.content = content;
+    }
+
+    @Column(nullable = false)
+    private int commentCount;
+
+    public void increaseCommentCount() {
+        this.commentCount++;
+    }
+
+    public void decreaseCommentCount() {
+        if(commentCount > 0) { commentCount--; }
     }
 }
