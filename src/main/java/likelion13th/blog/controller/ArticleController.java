@@ -2,6 +2,8 @@ package likelion13th.blog.controller;
 import likelion13th.blog.domain.Article;
 import likelion13th.blog.dto.*;
 import likelion13th.blog.service.ArticleService;
+import likelion13th.blog.service.CommentService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -9,15 +11,13 @@ import org.springframework.web.bind.annotation.*;
 import java.util.ArrayList;
 import java.util.List;
 
+@RequiredArgsConstructor
 @RestController
 @RequestMapping("/articles")
 public class ArticleController {
 
     private final ArticleService articleService;
-
-    public ArticleController(ArticleService articleService) {
-        this.articleService = articleService;
-    }
+    private final CommentService commentService;
 
     @PostMapping()
     public ResponseEntity<ApiResponse> createArticle(@RequestBody AddArticleRequest request) {
@@ -38,7 +38,7 @@ public class ArticleController {
     @GetMapping("/{id}")
     public ResponseEntity<ApiResponse> readArticle(@PathVariable Long id) {
 
-        ArticleResponse response = articleService.getArticle(id);
+        ArticleDetailResponse response = articleService.getArticle(id);
 
         return ResponseEntity.ok(new ApiResponse(true, 200, "success", response));
     }
@@ -56,4 +56,14 @@ public class ArticleController {
         articleService.deleteArticle(id, request);
         return ResponseEntity.ok(new ApiResponse(true, 204, "게시글 삭제 성공"));
     }
+
+    @PostMapping("/{articleId}")
+    public ResponseEntity<ApiResponse> createComment(@PathVariable Long articleId, @RequestBody AddCommentRequest request) {
+
+        CommentResponse response = commentService.addComment(articleId, request);
+
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(new ApiResponse(true, 201, "댓글 등록 성공", response));
+    }
+
 }

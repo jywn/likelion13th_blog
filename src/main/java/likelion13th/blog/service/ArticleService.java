@@ -3,8 +3,11 @@ package likelion13th.blog.service;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import likelion13th.blog.domain.Article;
+import likelion13th.blog.domain.Comment;
 import likelion13th.blog.dto.*;
 import likelion13th.blog.repository.ArticleRepository;
+import likelion13th.blog.repository.CommentRepository;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -12,14 +15,11 @@ import java.util.List;
 import java.util.NoSuchElementException;
 
 @Service
+@RequiredArgsConstructor
 public class ArticleService {
 
     private final ArticleRepository articleRepository;
-    private Long nextId = 1L;
-
-    public ArticleService(ArticleRepository articleRepository) {
-        this.articleRepository = articleRepository;
-    }
+    private final CommentRepository commentRepository;
 
     public ArticleResponse addArticle(AddArticleRequest request) {
 
@@ -40,11 +40,13 @@ public class ArticleService {
         return articleResponseList;
     }
 
-    public ArticleResponse getArticle(Long id) {
+    public ArticleDetailResponse getArticle(Long id) {
 
         Article article = articleRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("Cannot found article with id: " + id));
 
-        return ArticleResponse.of(article);
+        List<CommentResponse> comments = getCommentList(article);
+
+        return ArticleDetailResponse.of(article, comments);
     }
 
     @Transactional
@@ -74,4 +76,12 @@ public class ArticleService {
 
         articleRepository.delete(article);
     }
+
+    private List<CommentResponse> getCommentList(Article article) {
+
+        return commentRepository.findByArticle(article).stream()
+                .map(comment -> CommentResponse.of(comment))
+                .toList();
+    }
+
 }
